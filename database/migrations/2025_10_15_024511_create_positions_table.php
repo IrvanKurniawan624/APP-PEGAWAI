@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('positions', function (Blueprint $table) {
             $table->id();
             $table->string('nama_jabatan', 100);
+            $table->integer('potongan_per_hari')->default(0);
             $table->decimal('gaji_pokok', 10, 2);
             $table->timestamps();
         });

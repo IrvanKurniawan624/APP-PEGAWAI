@@ -27,11 +27,18 @@ class ApiFormatter
 
     public static function success($code, $message, $data = null)
     {
-        if($code === 200 || $code === 201){
+        if($code === 200){
             self::$success_response['code'] = $code;
             self::$success_response['data'] = $data;
             self::$success_response['message'] = $message;
             return response()->json(self::$success_response, self::$success_response['code']);
+        } else if ($code === 201){
+            return response()->json([
+                'code'    => 201,
+                'message' => $message,
+                'link'    => $data, 
+            ], 201);
+
         }
 
         return response()->json([

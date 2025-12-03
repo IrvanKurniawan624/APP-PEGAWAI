@@ -19,7 +19,7 @@
             <th>No.</th>
             <th>Nama Jabatan</th>
             <th>Gaji Pokok</th>
-            <th>Created At</th>
+            <th>PotonganAbsent/Hari</th>
             <th>Updated At</th>
             <th>Action</th>
         </tr>
@@ -30,7 +30,7 @@
             <td>{{ $key + 1 }}</td>
             <td>{{ $position->nama_jabatan }}</td>
             <td>{{ number_format($position->gaji_pokok, 0, ',', '.') }}</td>
-            <td>{{ $position->created_at->translatedFormat('d F Y, H:i') }}</td>
+            <td>{{ number_format($position->potongan_per_hari, 0, ',', '.') }}</td>
             <td>{{ $position->updated_at->translatedFormat('d F Y, H:i') }}</td>
             <td>
                 <div class="d-flex gap-2 justify-content-center">
@@ -71,6 +71,10 @@
                         <div class="col-md-12 form-group mb-3">
                             <label for="nama_jabatan">Nama Jabatan</label>
                             <input type="text" class="form-control" name="nama_jabatan" id="nama_jabatan">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Potongan Per Hari (Absence)</label>
+                            <input type="number" name="potongan_per_hari" class="form-control">
                         </div>
                         <div class="col-md-12 form-group mb-3">
                             <label for="gaji_pokok">Gaji Pokok (Base Salary)</label>

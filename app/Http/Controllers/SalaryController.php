@@ -2,90 +2,109 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
 use App\Models\Salary;
+use App\Models\Attendance;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Helpers\ApiFormatter;
-use Illuminate\Validation\ValidationException;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class SalaryController extends Controller
 {
-    public function index()
+    public function admin()
     {
-        $salaries = Salary::latest()->paginate(5);
-        return view('salaries.index', compact('salaries'));
+        $employees = Employee::with(['position'])->get();
+        return view('salary.admin', compact('employees'));
     }
 
-    public function store(Request $request)
+    public function preview(Request $req)
     {
-        try {
-            $request->validate([
-                'employee_id' => 'required|exists:employees,id',
-                'tanggal_gaji' => 'required|date',
-                'gaji_pokok' => 'required|numeric',
-                'tunjangan' => 'required|numeric',
-                'potongan' => 'required|numeric',
-                'total_gaji' => 'required|numeric'
-            ]);
+        $req->validate([
+            'employee_id' => 'required',
+            'bulan'       => 'required|date_format:Y-m'
+        ]);
 
-            $salary = Salary::create($request->all());
-            return ApiFormatter::success(200, "Data Berhasil Ditambahkan", $salary);
+        $employee = Employee::with('position')->find($req->employee_id);
+        if (!$employee) return ApiFormatter::error(404, "Karyawan tidak ditemukan");
 
-        } catch (ValidationException $e) {
-            return ApiFormatter::validate(json_encode($e->errors()));
-        } catch (\Exception $e) {
-            return ApiFormatter::error(500, "Terjadi kesalahan", $e->getMessage());
-        }
+        $alpha = Attendance::where('employee_id', $employee->id)
+            ->whereYear('date', Carbon::parse($req->bulan)->year)
+            ->whereMonth('date', Carbon::parse($req->bulan)->month)
+            ->where('status', 'alpha')
+            ->count();
+
+        $potongan  = $alpha * ($employee->position->potongan_per_hari ?? 0);
+        $tunjangan = $req->tunjangan ?? 0;
+        $final     = $employee->position->gaji_pokok + $tunjangan - $potongan;
+
+        return ApiFormatter::success(200, "Success", [
+            'nama'      => $employee->nama_lengkap,
+            'jabatan'   => $employee->position->nama_jabatan,
+            'gaji'      => $employee->position->gaji_pokok,
+            'alpha'     => $alpha,
+            'potongan'  => $potongan,
+            'tunjangan' => $tunjangan,
+            'final'     => $final,
+        ]);
     }
 
-    public function show($id)
+
+    public function generate(Request $req)
     {
-        $salary = Salary::find($id);
-        if (!$salary) {
-            return ApiFormatter::error(404, "Data tidak ditemukan");
-        }
-        return ApiFormatter::success(200, "Detail data berhasil diambil", $salary);
+        $req->validate([
+            'employee_id' => 'required',
+            'bulan'       => 'required|date_format:Y-m',
+        ]);
+
+        $employee = Employee::with('position')->find($req->employee_id);
+
+        if (!$employee)
+            return ApiFormatter::error(404, "Karyawan tidak ditemukan");
+
+        $alpha = Attendance::where('employee_id', $employee->id)
+            ->whereYear('date', Carbon::parse($req->bulan)->year)
+            ->whereMonth('date', Carbon::parse($req->bulan)->month)
+            ->where('status', 'alpha')
+            ->count();
+
+        $potongan  = $alpha * ($employee->position->potongan_per_hari ?? 0);
+        $tunjangan = $req->tunjangan ?? 0;
+        $final     = $employee->position->gaji_pokok + $tunjangan - $potongan;
+
+        $slip = Salary::create([
+            'employee_id'       => $employee->id,
+            'bulan'             => $req->bulan,
+            'base_salary'       => $employee->position->gaji_pokok,
+            'tunjangan'         => $tunjangan,
+            'total_absence'     => $alpha,
+            'absence_deduction' => $potongan,
+            'final_salary'      => $final,
+        ]);
+
+        return ApiFormatter::success(200, "Slip gaji berhasil dibuat", $slip);
     }
 
-    public function edit($id)
+    public function slipKaryawan()
     {
-        $salary = Salary::find($id);
-        if (!$salary) {
-            return ApiFormatter::error(404, "Data tidak ditemukan");
-        }
-        return ApiFormatter::success(200, "Data berhasil diambil untuk edit", $salary);
+        $employee = Auth::user()->employee;
+
+        if (!$employee)
+            return view('salary.karyawan-slip', ['slip' => null]);
+
+        $slip = $employee->salaries()->latest()->first();
+
+        return view('salary.karyawan-slip', compact('slip'));
     }
-
-    public function update(Request $request, $id)
+    
+    public function downloadPdf($id)
     {
-        try {
-            $request->validate([
-                'employee_id' => 'required|exists:employees,id',
-                'tanggal_gaji' => 'required|date',
-                'gaji_pokok' => 'required|numeric',
-                'tunjangan' => 'required|numeric',
-                'potongan' => 'required|numeric',
-                'total_gaji' => 'required|numeric'
-            ]);
+        $salary = Salary::with('employee.position')->findOrFail($id);
 
-            $salary = Salary::find($id);
-            if (!$salary) {
-                return ApiFormatter::error(404, "Data tidak ditemukan");
-            }
+        $pdf = PDF::loadView('salary.pdf', compact('salary'))
+                    ->setPaper('A4', 'portrait');
 
-            $salary->update($request->all());
-            return ApiFormatter::success(200, "Data berhasil diperbarui", $salary);
-        } catch (ValidationException $e) {
-            return ApiFormatter::validate(json_encode($e->errors()));
-        }
-    }
-
-    public function destroy($id)
-    {
-        $salary = Salary::find($id);
-        if (!$salary) {
-            return ApiFormatter::error(404, "Data tidak ditemukan");
-        }
-        $salary->delete();
-        return ApiFormatter::success(200, "Data berhasil dihapus");
+        return $pdf->download("Slip-Gaji-{$salary->employee->nama_lengkap}-{$salary->bulan}.pdf");
     }
 }

@@ -28,7 +28,7 @@ window.Swal = Swal;
             const fieldPath = $el.data('field');             
             const val = getNestedValue(data, fieldPath); 
             
-
+            
             if (fieldPath === 'status') {
                 $el.text(val);
                 $el.removeClass('bg-success bg-danger');
@@ -39,9 +39,24 @@ window.Swal = Swal;
                 } else {
                     $el.text('');
                 }
+            } else if (fieldPath.includes('photo')) {
+                if (val) {
+                    $el.attr('src', '/' + val);
+                    $el.removeClass('d-none');
+                } else {
+                    $el.attr('src', '/icons/no-image.png');
+                }
             } else {
-                const displayText = (val === undefined || val === null) ? '' : val;
-                $el.text(displayText);
+                if ($el.is("img")) {
+                    if (val) {
+                        $el.attr("src", "/" + val);
+                    } else {
+                        $el.attr("src", "");
+                    }
+                }else{
+                    const displayText = (val === undefined || val === null) ? '' : val;
+                    $el.text(displayText);
+                }
             }
         });
     }
@@ -106,6 +121,11 @@ window.Swal = Swal;
     $(function () {
         $.ajaxSetup({
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+        });
+
+        $('#sidebarToggle').on('click', function () {
+            $('#sidebar').toggleClass('sidebar-expanded sidebar-collapsed');
+            $('#contentWrapper').toggleClass('content-expanded content-collapsed');
         });
 
         document.querySelectorAll('.modal').forEach(modalEl => {
@@ -189,10 +209,8 @@ window.Swal = Swal;
                 
                 btn.attr('disabled', true);
                 
-                const modalLoading = document.getElementById('modal_loading');
-                if (modalLoading) {
-                    new bootstrap.Modal(modalLoading).show();
-                }
+                const modalLoading = new bootstrap.Modal(document.getElementById('modal_loading'));
+                modalLoading.show();
 
                 $.ajax({
                     url: $form.attr('action'),
@@ -200,10 +218,8 @@ window.Swal = Swal;
                     data: $form.serialize(),
                     
                     complete: function() {
-                        const loadingEl = document.getElementById('modal_loading');
-                        const bsLoadingModal = bootstrap.Modal.getInstance(loadingEl);
-                        if (bsLoadingModal) bsLoadingModal.hide();
-
+                        setTimeout(() => modalLoading.hide(), 500);
+                        console.log('test');
                         btn.removeAttr('disabled');
                     },
                     
@@ -284,4 +300,75 @@ window.Swal = Swal;
             });
         });
     });
+
+    //? Auth
+    $('#form_login').submit(function (e) {
+        e.preventDefault();
+
+        const modalLoading = new bootstrap.Modal(document.getElementById('modal_loading'));
+        modalLoading.show();
+
+        $.ajax({
+            url: "/login",
+            type: "POST",
+            data: $('#form_login').serialize(),
+            dataType: "JSON",
+            success: function (response) {
+                setTimeout(() => modalLoading.hide(), 500);
+
+                if (response.code === 201) {
+                    Swal.fire('Berhasil!', response.message, 'success').then(function(){
+                        window.location.href = response.link;
+                    })
+                } else {
+                    Swal.fire('Gagal!', response.message, 'error');
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                
+                setTimeout(() => modalLoading.hide(), 500);
+                if(jqXHR.responseJSON.message){
+                    Swal.fire("Oops!", jqXHR.responseJSON.message, 'error');
+                } else{
+                    Swal.fire(
+                        'Oops!',
+                        'Terjadi kesalahan segera hubungi tim IT (' + errorThrown + ')',
+                        'error'
+                    );
+                }
+            }
+        });
+    });
+
+    $('#form_register').submit(function (e) {
+        e.preventDefault();
+
+        const modalLoading = new bootstrap.Modal(document.getElementById('modal_loading'));
+        modalLoading.show();
+
+        $.ajax({
+            url: "/register",
+            type: "POST",
+            data: $(this).serialize(),
+            dataType: "JSON",
+
+            success: function (response) {
+                setTimeout(() => modalLoading.hide(), 500);
+
+                if (response.code === 201) {
+                    Swal.fire('Berhasil!', response.message, 'success').then(function(){
+                        window.location.href = response.link;
+                    });
+                } else {
+                    Swal.fire('Gagal!', response.message, 'error');
+                }
+            },
+
+            error: function (jqXHR, textStatus, errorThrown) {
+                setTimeout(() => modalLoading.hide(), 500);
+                Swal.fire('Oops!', 'Terjadi kesalahan (' + errorThrown + ')', 'error');
+            }
+        });
+    });
+
 })();

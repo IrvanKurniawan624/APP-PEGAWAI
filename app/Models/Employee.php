@@ -6,16 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
 {
-    protected $fillable = [
-        "nama_lengkap",
-        "email",
-        "nomor_telepon",
-        "tanggal_lahir",
-        "alamat",
-        "tanggal_masuk",
-        "status",
-        "departmen_id",
-        "jabatan_id"
+    protected $guarded = [
+        "id"
     ];
     
     public function department()
@@ -27,4 +19,15 @@ class Employee extends Model
     {
         return $this->belongsTo(Position::class, 'jabatan_id');
     }
+
+    public function salaries()
+    {
+        return $this->hasMany(Salary::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
 }

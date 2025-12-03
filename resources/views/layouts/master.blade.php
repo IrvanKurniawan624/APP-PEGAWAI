@@ -9,6 +9,7 @@
     <link rel="icon" type="image/png" href="/icons/favicon/favicon-32x32.png" sizes="32x32" />
     <link rel="icon" type="image/png" href="/icons/favicon/favicon-16x16.png" sizes="16x16" />
     <script src="{{ asset('js/jquery.min.js') }}"></script>
+    <title>@yield('title')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -16,10 +17,10 @@
     <div class="container-fluid d-flex p-0">
         @include('layouts.sidebar')
     
-        <div class="content-main-wrapper w-100" style="margin-left: 300px">
+        <div id="contentWrapper" class="content-main-wrapper w-100 content-expanded">
             @include('layouts.header')
             
-            <div class="content p-4" style="box-sizing: border-box">
+            <div class="content pt-4 pb-5" style="box-sizing: border-box">
                 <div >@yield('content')</div>
             </div>
 

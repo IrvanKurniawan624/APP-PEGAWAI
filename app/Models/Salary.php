@@ -9,13 +9,8 @@ class Salary extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'employee_id',
-        'tanggal_gaji',
-        'gaji_pokok',
-        'tunjangan',
-        'potongan',
-        'total_gaji'
+    protected $guarded = [
+        'id'
     ];
 
     public function employee()

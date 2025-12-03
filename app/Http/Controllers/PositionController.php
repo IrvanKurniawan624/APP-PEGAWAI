@@ -21,6 +21,7 @@ class PositionController extends Controller
             $request->validate([
                 'nama_jabatan' => 'required|string|max:255',
                 'gaji_pokok' => 'required|numeric',
+                'potongan_per_hari' => 'required|numeric',
             ]);
 
             $position = Position::create($request->all());
@@ -57,6 +58,7 @@ class PositionController extends Controller
             $request->validate([
                 'nama_jabatan' => 'required|string|max:255',
                 'gaji_pokok' => 'required|numeric',
+                'potongan_per_hari' => 'required|numeric',
             ]);
 
             $position = Position::find($id);
