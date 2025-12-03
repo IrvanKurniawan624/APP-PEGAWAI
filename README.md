@@ -5,6 +5,8 @@
 
 *Employee Management & Attendance System*
 
+![APP Screenshot](public/images/ss-project.png)
+
 **APP-PEGAWAI** adalah aplikasi manajemen kepegawaian modern berbasis **Laravel 12**, dirancang untuk mengelola proses absensi berbasis **kamera + GPS**, pengelolaan data pegawai, slip gaji, serta pengumuman internal secara terpusat. Aplikasi ini menyediakan alur kerja yang efisien untuk dua role utama — **Admin** sebagai pengelola penuh sistem, dan **Karyawan** sebagai pengguna yang melakukan absensi dan melihat data terkait. Dengan dukungan **Vite**, **Bootstrap**, dan **AJAX**, aplikasi ini menyajikan pengalaman yang cepat, interaktif, dan mudah digunakan.
 
 ---
@@ -75,15 +77,7 @@ php artisan serve
 
 ---
 
-## 🖼️ Screenshot Manual
-
-```markdown
-![APP Screenshot](public/images/ss-project.png)
-```
-
----
-
-## 👤 Default Roles
+## 👤 Default Account
 
 | Role     | Email                                     | Password |
 | -------- | ----------------------------------------- | -------- |
