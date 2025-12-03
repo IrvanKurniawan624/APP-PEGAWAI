@@ -1,4 +1,3 @@
-Berikut versi yang **lebih rapi, profesional, dan terstruktur**, tetap singkat seperti preferensi Anda:
 
 ---
 
@@ -79,7 +78,7 @@ php artisan serve
 ## 🖼️ Screenshot Manual
 
 ```markdown
-![APP Screenshot](public/screenshots/images/ss-project.png)
+![APP Screenshot](public/images/ss-project.png)
 ```
 
 ---
